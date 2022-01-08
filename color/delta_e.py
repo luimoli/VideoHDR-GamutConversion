@@ -1,9 +1,6 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-# from color import color_model
-import color_model
-import math
 import colour
 
 

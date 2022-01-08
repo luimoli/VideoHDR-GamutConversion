@@ -13,4 +13,4 @@ if __name__ == '__main__':
     image_rgb = np.float32(image_bgr[..., ::-1].copy())
     result_rgb_image = SDRConvention.hdr_to_sdr(image_rgb)
     # cv2.imwrite(r"D:\\Code\\VideoHDR-mm\\example-data\\0000002_sdr_no.png", np.uint8(result_rgb_image[..., ::-1] * 255.))
-    cv2.imwrite(r"D:\\Code\\VideoHDR-GamutConv\\example-data\\0000050_sdr_v3_MM2022.png", (result_rgb_image[..., ::-1] * 255.))
+    cv2.imwrite(r"D:\\Code\\VideoHDR-GamutConv\\example-data\\0000050_sdr_v3_vifi_tst.png", (result_rgb_image[..., ::-1] * 255.))

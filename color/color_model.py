@@ -37,14 +37,6 @@ def xyY_to_XYZ(xyY):
     return XYZ
 
 
-# def check_value(img):
-#     h,w = img.shape[:2]
-#     for i in range(h):
-#         for j in range(w):
-#             if img[i][j][0] == 0 and img[i][j][1] == 0 and img[i][j][2] == 0:
-#                 print(img[i][j])
-
-
 def XYZ_to_uvY(XYZ):
     '''
     from XYZ to u'v'Y
@@ -55,30 +47,6 @@ def XYZ_to_uvY(XYZ):
     uvY[:, :, 0] = 4*X / (X + 15*Y + 3*Z)
     uvY[:, :, 1] = 9*Y / (X + 15*Y + 3*Z)
     return uvY
-
-# def uvY_to_XYZ(uvY):
-#     '''
-#     from u'v'Y to XYZ
-#     '''
-#     XYZ =  np.empty_like(uvY, dtype=np.float32)
-#     u, v, Y = uvY[:, :, 0], uvY[:, :, 1], uvY[:, :, 2]
-#     XYZ[:, :, 1] = Y
-#     XYZ[:, :, 0] = (u * Y * 9) / (v * 4)
-#     XYZ[:, :, 2] = (36 - 9*u -60*v) * Y / (4*v)
-#     return XYZ
-
-# def uvY_to_XYZ(uvY):
-#     '''
-#     from u'v'Y to XYZ
-#     '''
-#     # XYZ =  np.empty_like(uvY, dtype=np.float32)
-#     u, v, Y = uvY[:, :, 0], uvY[:, :, 1], uvY[:, :, 2]
-#     xyY_x = 9*u / (6*u - 16*v + 12)
-#     xyY_y = 4*v / (6*u - 16*v + 12)
-#     xyY_Y = Y
-#     xyY = np.concatenate((xyY_x[...,None], xyY_y[...,None], xyY_Y[...,None]), -1)
-#     XYZ = xyY_to_XYZ(xyY)
-#     return XYZ
 
 def uvY_to_XYZ(uvY):
     '''
@@ -109,8 +77,6 @@ def ootf_HLG_BT2100_1(x, L_B, L_W, gamma=1.2):
 
     # RGB_D =  np.stack([R_D, G_D, B_D], dim=2)
     RGB_D =  np.stack([R_D, G_D, B_D], axis=2)
-
-
     return RGB_D
 
 

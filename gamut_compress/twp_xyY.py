@@ -1,7 +1,7 @@
 import numpy as np
-import color_model
+from color import color_model
 
-class CG_conversion:
+class Gamut_Conversion:
     def __init__(self) -> None:
         self.RGB709_to_XYZ_matrix =  np.array([[0.412391, 0.357584, 0.180481],
                                                     [0.212639, 0.715169, 0.072192],
@@ -95,21 +95,21 @@ class CG_conversion:
 
         return sdr_RGB709
     
-    def CG_BT709_to_BT2020(self, sdr_img_RGB709_nonlinear):
-        '''
-        this function turns SDR(bt.709) into SDR(bt.2020).
-        ( used before SDR(bt.2020)_to_HDR(bt.2020) )
+    # def CG_BT709_to_BT2020(self, sdr_img_RGB709_nonlinear):
+    #     '''
+    #     this function turns SDR(bt.709) into SDR(bt.2020).
+    #     ( used before SDR(bt.2020)_to_HDR(bt.2020) )
 
-        :param: sdr_img_RGB709_nonlinear: RGB img of SDR(bt.2020), [0,1]
-        :return: img_rgb2020_nolinear: RGB img of SDR(bt.709), [0,1]
-        '''
-        img_rgb709_linear = sdr_img_RGB709_nonlinear ** 2.4
-        img_rgb2020_linear = np.einsum('ic,hwc->hwi', self.RGB709_to_RGB2020_matrix, img_rgb709_linear)
-        img_rgb2020_nolinear = img_rgb2020_linear ** (1 / 2.4)
-        return img_rgb2020_nolinear
+    #     :param: sdr_img_RGB709_nonlinear: RGB img of SDR(bt.2020), [0,1]
+    #     :return: img_rgb2020_nolinear: RGB img of SDR(bt.709), [0,1]
+    #     '''
+    #     img_rgb709_linear = sdr_img_RGB709_nonlinear ** 2.4
+    #     img_rgb2020_linear = np.einsum('ic,hwc->hwi', self.RGB709_to_RGB2020_matrix, img_rgb709_linear)
+    #     img_rgb2020_nolinear = img_rgb2020_linear ** (1 / 2.4)
+    #     return img_rgb2020_nolinear
 
 if __name__ == "__main__":
-    CG_conversion = CG_conversion()
+    CG_conversion = Gamut_Conversion()
     print(CG_conversion.white_point)
 
     rgb709_example = np.float32(np.ones((540,960,3)) * 0.5)
