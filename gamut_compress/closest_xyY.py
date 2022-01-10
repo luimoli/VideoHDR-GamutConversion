@@ -1,35 +1,37 @@
-import numpy as np
-from color import color_model
+import numpy as torch
+import torch
 import matplotlib.pyplot as plt
+
+from color import color_model
 
 class Gamut_Conversion:
     def __init__(self) -> None:
-        self.RGB709_to_XYZ_matrix =  np.array([[0.412391, 0.357584, 0.180481],
+        self.RGB709_to_XYZ_matrix =  torch.tensor([[0.412391, 0.357584, 0.180481],
                                                     [0.212639, 0.715169, 0.072192],
-                                                    [0.019331, 0.119195, 0.950532]], dtype= np.float32)
+                                                    [0.019331, 0.119195, 0.950532]], dtype= torch.float32)
             
-        self.XYZ_to_RGB709_matrix = np.array([[ 3.2409663 , -1.5373788 , -0.49861172],
+        self.XYZ_to_RGB709_matrix = torch.tensor([[ 3.2409663 , -1.5373788 , -0.49861172],
                                                     [-0.96924204,  1.8759652 ,  0.04155577],
-                                                    [ 0.05562956, -0.20397693,  1.0569717 ]], dtype=np.float32)
+                                                    [ 0.05562956, -0.20397693,  1.0569717 ]], dtype=torch.float32)
 
-        self.RGB2020_to_XYZ_matrix =  np.array([[0.636958, 0.144617, 0.168881],
+        self.RGB2020_to_XYZ_matrix =  torch.tensor([[0.636958, 0.144617, 0.168881],
                                                     [0.262700, 0.677998, 0.059302],
-                                                    [0.000000, 0.028073, 1.060985]], dtype= np.float32)
+                                                    [0.000000, 0.028073, 1.060985]], dtype= torch.float32)
 
-        self.XYZ_to_RGB2020_matrix =  np.array([[1.716651, -0.355671, -0.253366],
+        self.XYZ_to_RGB2020_matrix =  torch.tensor([[1.716651, -0.355671, -0.253366],
                                                     [-0.666684, 1.616481, 0.015769],
-                                                    [0.017640, -0.042771, 0.942103]], dtype= np.float32)
+                                                    [0.017640, -0.042771, 0.942103]], dtype= torch.float32)
         self.hdr_prima, self.sdr_prima, self.white_point = self.compute_prima()
 
 
     def compute_prima(self):
-        hdr_prima = np.array([[ 0.708,  0.292],
+        hdr_prima = torch.tensor([[ 0.708,  0.292],
                                 [ 0.17 ,  0.797],
                                 [ 0.131,  0.046]])
-        sdr_prima = np.array([[ 0.64,  0.33],
+        sdr_prima = torch.tensor([[ 0.64,  0.33],
                                 [ 0.3 ,  0.6 ],
                                 [ 0.15,  0.06]])
-        white_point = np.array([ 0.3127,  0.329 ])
+        white_point = torch.tensor([ 0.3127,  0.329 ])
         return hdr_prima, sdr_prima, white_point
     
     def calc_k_b(self, x1, y1, x2, y2):
@@ -41,9 +43,9 @@ class Gamut_Conversion:
         x = (b2-b1) / (k1-k2)
         y = k2 * x + b2
         return x, y
-        # return np.concatenate((x[..., None], y[..., None]), axis=-1)
+        # return torch.concatenate((x[..., None], y[..., None]), axis=-1)
     def euclidean(self, x1, y1, x2, y2): 
-        return np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+        return torch.sqrt((x1 - x2)**2 + (y1 - y2)**2)
     
     def func_corner_closet(self, k1, b1, k2, b2, rgb_peak, sdrx, sdry, corner_type):
         '''
@@ -55,25 +57,25 @@ class Gamut_Conversion:
         cornertype: choose which section formed by two lines
         '''
         if corner_type == '<<':
-            sdrx_cut = np.where((k1 * sdrx + b1 < sdry) & ( k2 * sdrx + b2 < sdry), 
-                        np.ones_like(sdry)*rgb_peak[0], sdrx)
-            sdry_cut = np.where((k1 * sdrx + b1 < sdry) & ( k2 * sdrx + b2 < sdry), 
-                        np.ones_like(sdry)*rgb_peak[1], sdry)
+            sdrx_cut = torch.where((k1 * sdrx + b1 < sdry) & ( k2 * sdrx + b2 < sdry), 
+                        torch.ones_like(sdry)*rgb_peak[0], sdrx)
+            sdry_cut = torch.where((k1 * sdrx + b1 < sdry) & ( k2 * sdrx + b2 < sdry), 
+                        torch.ones_like(sdry)*rgb_peak[1], sdry)
         elif corner_type == '<>':
-            sdrx_cut = np.where((k1 * sdrx + b1 < sdry) & ( k2 * sdrx + b2 > sdry), 
-                        np.ones_like(sdry)*rgb_peak[0], sdrx)
-            sdry_cut = np.where((k1 * sdrx + b1 < sdry) & ( k2 * sdrx + b2 > sdry), 
-                        np.ones_like(sdry)*rgb_peak[1], sdry)
+            sdrx_cut = torch.where((k1 * sdrx + b1 < sdry) & ( k2 * sdrx + b2 > sdry), 
+                        torch.ones_like(sdry)*rgb_peak[0], sdrx)
+            sdry_cut = torch.where((k1 * sdrx + b1 < sdry) & ( k2 * sdrx + b2 > sdry), 
+                        torch.ones_like(sdry)*rgb_peak[1], sdry)
         elif corner_type == '><':
-            sdrx_cut = np.where((k1 * sdrx + b1 > sdry) & ( k2 * sdrx + b2 < sdry), 
-                        np.ones_like(sdry)*rgb_peak[0], sdrx)
-            sdry_cut = np.where((k1 * sdrx + b1 > sdry) & ( k2 * sdrx + b2 < sdry), 
-                        np.ones_like(sdry)*rgb_peak[1], sdry)
+            sdrx_cut = torch.where((k1 * sdrx + b1 > sdry) & ( k2 * sdrx + b2 < sdry), 
+                        torch.ones_like(sdry)*rgb_peak[0], sdrx)
+            sdry_cut = torch.where((k1 * sdrx + b1 > sdry) & ( k2 * sdrx + b2 < sdry), 
+                        torch.ones_like(sdry)*rgb_peak[1], sdry)
         elif corner_type == '>>':
-            sdrx_cut = np.where((k1 * sdrx + b1 > sdry) & ( k2 * sdrx + b2 > sdry), 
-                        np.ones_like(sdry)*rgb_peak[0], sdrx)
-            sdry_cut = np.where((k1 * sdrx + b1 > sdry) & ( k2 * sdrx + b2 > sdry), 
-                        np.ones_like(sdry)*rgb_peak[1], sdry)
+            sdrx_cut = torch.where((k1 * sdrx + b1 > sdry) & ( k2 * sdrx + b2 > sdry), 
+                        torch.ones_like(sdry)*rgb_peak[0], sdrx)
+            sdry_cut = torch.where((k1 * sdrx + b1 > sdry) & ( k2 * sdrx + b2 > sdry), 
+                        torch.ones_like(sdry)*rgb_peak[1], sdry)
         else:
             print('wrong corner type!')
         return sdrx_cut, sdry_cut
@@ -88,9 +90,9 @@ class Gamut_Conversion:
         return res_x, res_y
 
     def gamut_closet_xyY(self, sdr_RGB2020_signal):
-        sdr2020_xyz =  np.einsum('ic,hwc->hwi', self.RGB2020_to_XYZ_matrix, sdr_RGB2020_signal)
+        sdr2020_xyz =  torch.einsum('ic,hwc->hwi', self.RGB2020_to_XYZ_matrix, sdr_RGB2020_signal)
         sdr2020_xyY = color_model.XYZ_to_xyY(sdr2020_xyz)
-        sdr2020_xyY =  np.where( np.isnan(sdr2020_xyY),  np.zeros_like(sdr2020_xyY), sdr2020_xyY)  #TODO
+        sdr2020_xyY =  torch.where( torch.isnan(sdr2020_xyY),  torch.zeros_like(sdr2020_xyY), sdr2020_xyY)  #TODO
         sdrx, sdry = sdr2020_xyY[:, :, 0],sdr2020_xyY[:, :, 1]
         Rc, Gc, Bc = self.sdr_prima
         rg_709_k, rg_709_b = self.calc_k_b(*self.sdr_prima[0],*self.sdr_prima[1])
@@ -107,7 +109,7 @@ class Gamut_Conversion:
         gb_k, gb_b = (-1.0 / gb_709_k), Gc[1] - Gc[0] * (-1.0 / gb_709_k)
         bg_k, bg_b = gb_k, Bc[1] - Bc[0] * gb_k
 
-        sdrx_cut, sdry_cut = sdrx.copy(), sdry.copy()
+        sdrx_cut, sdry_cut = sdrx.clone(), sdry.clone()
         sdrx_cut, sdry_cut = self.func_corner_closet(gb_k, gb_b, gr_k, gr_b, Gc, sdrx_cut, sdry_cut, corner_type='<<')
         sdrx_cut, sdry_cut = self.func_corner_closet(bg_k, bg_b, br_k, br_b, Bc, sdrx_cut, sdry_cut, corner_type='>>')
         sdrx_cut, sdry_cut = self.func_corner_closet(rb_k, rb_b, rg_k, rg_b, Rc, sdrx_cut, sdry_cut, corner_type='<>')
@@ -116,12 +118,12 @@ class Gamut_Conversion:
         p709_rb =  self.calc_vertical_cross_points(rb_709_k, rb_709_b, sdrx_cut, sdry_cut)
         p709_gb =  self.calc_vertical_cross_points(gb_709_k, gb_709_b, sdrx_cut, sdry_cut)
 
-        sdrx_cut = np.where(rg_709_k * sdrx_cut + rg_709_b  < sdry_cut, p709_rg[0], sdrx_cut)
-        sdry_cut = np.where(rg_709_k * sdrx_cut + rg_709_b  < sdry_cut, p709_rg[1], sdry_cut)
-        sdrx_cut = np.where(gb_709_k * sdrx_cut + gb_709_b  < sdry_cut, p709_gb[0], sdrx_cut)
-        sdry_cut = np.where(gb_709_k * sdrx_cut + gb_709_b  < sdry_cut, p709_gb[1], sdry_cut)
-        sdrx_cut = np.where(rb_709_k * sdrx_cut + rb_709_b  > sdry_cut, p709_rb[0], sdrx_cut)
-        sdry_cut = np.where(rb_709_k * sdrx_cut + rb_709_b  > sdry_cut, p709_rb[1], sdry_cut)
+        sdrx_cut = torch.where(rg_709_k * sdrx_cut + rg_709_b  < sdry_cut, p709_rg[0], sdrx_cut)
+        sdry_cut = torch.where(rg_709_k * sdrx_cut + rg_709_b  < sdry_cut, p709_rg[1], sdry_cut)
+        sdrx_cut = torch.where(gb_709_k * sdrx_cut + gb_709_b  < sdry_cut, p709_gb[0], sdrx_cut)
+        sdry_cut = torch.where(gb_709_k * sdrx_cut + gb_709_b  < sdry_cut, p709_gb[1], sdry_cut)
+        sdrx_cut = torch.where(rb_709_k * sdrx_cut + rb_709_b  > sdry_cut, p709_rb[0], sdrx_cut)
+        sdry_cut = torch.where(rb_709_k * sdrx_cut + rb_709_b  > sdry_cut, p709_rb[1], sdry_cut)
 
         # plt.figure(num=3, figsize=(8, 8))
         # plt.title("the distribution of x and y")
@@ -134,19 +136,18 @@ class Gamut_Conversion:
         # plt.scatter(sdrx_cut,sdry_cut,s=0.1,c='r',label='bt.709')
         # # plt.scatter(sdr2020_xyY[:,:,0],sdr2020_xyY[:,:,1],s=0.1,c='b',label='bt.2020')
         
-        sdr709_xyY =  np.concatenate((sdrx_cut[..., None], sdry_cut[..., None], sdr2020_xyY[:,:,2].copy()[..., None]), axis=-1)
+        sdr709_xyY =  torch.cat((sdrx_cut[..., None], sdry_cut[..., None], sdr2020_xyY[:,:,2].clone()[..., None]), dim=-1)
         sdr709_xyz = color_model.xyY_to_XYZ(sdr709_xyY)
-        sdr_RGB709 = np.einsum('ic,hwc->hwi', self.XYZ_to_RGB709_matrix, sdr709_xyz)
+        sdr_RGB709 = torch.einsum('ic,hwc->hwi', self.XYZ_to_RGB709_matrix, sdr709_xyz)
 
         # #--------------test saturation boundary---------------------------------------------------
         # sdr_hsv = colour.RGB_to_HSV(sdr_RGB709)
         # sdr_hsv[:,:,1] *= 1.1
         # sdr_RGB709_mores = colour.HSV_to_RGB(sdr_hsv)
-        # sdr_RGB709_mores_xyz =  np.einsum('ic,hwc->hwi', RGB709_to_XYZ_matrix, sdr_RGB709_mores)
+        # sdr_RGB709_mores_xyz =  torch.einsum('ic,hwc->hwi', RGB709_to_XYZ_matrix, sdr_RGB709_mores)
         # sdr_RGB709_mores_xyY = color_model.XYZ_to_xyY(sdr_RGB709_mores_xyz)
         # plt.scatter(sdr_RGB709_mores_xyY[:,:,0],sdr_RGB709_mores_xyY[:,:,1],s=0.1,c='g',label='bt.our_test_res')
         # plt.legend()
-        # import ipdb;ipdb.set_trace()
 
         return sdr_RGB709
         # return sdr_RGB709_mores
