@@ -1,20 +1,41 @@
 import torch 
 
-def XYZ_to_xyY(XYZ):
-    xyY =  torch.empty_like(XYZ)
-    X, Y, Z = XYZ[:, :, 0], XYZ[:, :, 1], XYZ[:, :, 2]
-    xyY[:, :, 2] = Y
-    xyY[:, :, 0] = X / (X + Y + Z)
-    xyY[:, :, 1] = Y / (X + Y + Z)
-    return xyY
+def stack(arr):
+    return torch.cat([x[..., None] for x in arr], axis=-1)
+
+def split(arr):
+    return [arr[..., x] for x in range(arr.shape[-1])]
 
 def xyY_to_XYZ(xyY):
-    XYZ =  torch.empty_like(xyY, dtype= torch.float32)
-    x, y, Y = xyY[:, :, 0], xyY[:, :, 1], xyY[:, :, 2]
-    XYZ[:, :, 1] = Y
-    XYZ[:, :, 0] = x * Y / y
-    XYZ[:, :, 2] = (1 - x - y) * Y / y
+    """
+    [Converts between *CIE XYZ* tristimulus values and *CIE xyY* colourspace with reference *illuminant*.]
+    Args:
+        xyY ([array_like]): [*CIE xyY* colourspace array in domain [0, 1].]
+    Returns:
+        [array_like]: [*CIE XYZ* tristimulus values array in domain [0, 1].]
+    """
+    x, y, Y = split(xyY)
+    XYZ = torch.where((y == 0)[..., None], stack((y, y, y)), stack((x * Y / y, Y, (1 - x - y) * Y / y)))
+
     return XYZ
+
+
+def XYZ_to_xyY(XYZ, illuminant=[ 0.3127,  0.329]):
+    """
+    [Converts from *CIE XYZ* tristimulus values to *CIE xyY* colourspace with reference *illuminant*.]
+    Args:
+        XYZ ([array_like]): [*CIE XYZ* tristimulus values in domain [0, 1].]
+    Returns:
+        [type]: [*CIE xyY* colourspace array in domain [0, 1].]
+    """
+    X, Y, Z = split(XYZ)
+    XYZ_n = torch.zeros(XYZ.shape)
+    XYZ_n[..., 0:2] = torch.tensor(illuminant)
+
+    # replace the point which contains 0 in XYZ-format to avoid zero-divide.
+    xyY = torch.where(torch.all(XYZ == 0, axis=-1)[..., None], XYZ_n, stack((X / (X + Y + Z), Y / (X + Y + Z), Y))) 
+
+    return xyY
 
 def XYZ_to_uvY(XYZ):
     '''

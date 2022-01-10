@@ -2,9 +2,9 @@ import math
 import torch
 
 from color import color_model
-# from gamut_compress.twp_xyY import Gamut_Conversion
+from gamut_compress.twp_xyY import Gamut_Conversion
 # from gamut_compress.closest_xyY import Gamut_Conversion
-from gamut_compress.closest_uvY import Gamut_Conversion
+# from gamut_compress.closest_uvY import Gamut_Conversion
 
 class SdrConversion:
     def __init__(self, dark_point=(15, 18), skin_point=(63, 110), reference_point=(90.667, 203), sdr_ip=70,
@@ -129,20 +129,16 @@ class SdrConversion:
         sdr_RGB2020_nolinear =  torch.where(torch.isnan(sdr_RGB2020_nolinear),  torch.zeros_like(sdr_RGB2020_nolinear),
                                        sdr_RGB2020_nolinear)   
         
-        #--------------------2020 -> 709----------------------------------
+        #--------------------BT.2020 -> BT.709----------------------------------
         # result_rgb_image_v0 =  torch.einsum('ic,hwc->hwi', self.RGB2020_to_RGB709_matrix, sdr_RGB2020_nolinear)
-        # result_rgb_image_v1 = self.Gamut_Conversion.gamut_twp_xyY(sdr_RGB2020_nolinear)
+        result_rgb_image_v1 = self.Gamut_Conversion.gamut_twp_xyY(sdr_RGB2020_nolinear)
         # result_rgb_image_v2 = self.Gamut_Conversion.gamut_closet_xyY(sdr_RGB2020_nolinear)
-        # # result_rgb_image_v3 = self.Gamut_Conversion.gamut_twp_uvY(sdr_RGB2020_nolinear)
         # result_rgb_image_v3 = self.Gamut_Conversion.gamut_closet_uvY(sdr_RGB2020_nolinear)
 
         # #--TODO
-        # result_rgb_image[result_rgb_image > 1] = 1
-        # result_rgb_image[result_rgb_image < 0] = 0
-        # return result_rgb_image_v3
-
-        result_rgb_image_vifi = self.Gamut_Conversion.gamut_closet_uvY(sdr_RGB2020_nolinear)
-        return result_rgb_image_vifi
+        result_rgb_image_v1[result_rgb_image_v1 > 1] = 1
+        result_rgb_image_v1[result_rgb_image_v1 < 0] = 0
+        return result_rgb_image_v1
 
         # #-------------------test color difference----------------------------------------------------------------
         # res_list = [result_rgb_image_v0, result_rgb_image_v1, result_rgb_image_v2, result_rgb_image_v3]
